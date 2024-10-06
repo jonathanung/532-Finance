@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from app.models.auth import EmailPasswordRequestForm
 from app.controllers import user as user_controller
 from app.controllers import ocr as ocr_controller
-from app.models.user import UserCreate, Token, User, ExpenseCreate, Expense  # Update this import
+from app.models.user import UserCreate, Token, User, ExpenseCreate, Expense, ChangePasswordRequest, BudgetUpdate
 from app.utils.auth import get_current_user
 
 load_dotenv()
@@ -45,11 +45,21 @@ async def delete_user(current_user: User = Depends(get_current_user)):
 async def update_user(updated_user: UserCreate, current_user: User = Depends(get_current_user)):
     return await user_controller.update_user(updated_user, current_user)
 
+@app.put("/change_password")
+async def change_password(request: ChangePasswordRequest, current_user: User = Depends(get_current_user)):
+    return await user_controller.change_password(current_user, request.current_password, request.new_password)
+
 # OCR ROUTE
 
 @app.post("/ocr")
 async def ocr_endpoint(image: UploadFile = File(...)):
     return await ocr_controller.process_ocr(image)
+
+# Insights Route
+
+@app.get("/insights")
+async def get_insights(current_user: User = Depends(get_current_user)):
+    return await user_controller.get_insights(current_user)
 
 # EXPENSE ROUTES
 
@@ -94,8 +104,8 @@ async def get_budget(current_user: User = Depends(get_current_user)):
     return await user_controller.get_budget(current_user)
 
 @app.put("/budget")
-async def update_budget(budget: float, current_user: User = Depends(get_current_user)):
-    return await user_controller.update_budget(current_user, budget)
+async def update_budget(budget_update: BudgetUpdate, current_user: User = Depends(get_current_user)):
+    return await user_controller.update_budget(current_user, budget_update.budget)
 
 # COINS ROUTES
 

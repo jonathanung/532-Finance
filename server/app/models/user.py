@@ -49,5 +49,12 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 class TokenData(BaseModel):
     email: str | None = None
+
+class BudgetUpdate(BaseModel):
+    budget: float

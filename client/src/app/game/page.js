@@ -7,6 +7,7 @@ import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { useRouter } from "next/navigation";
 import OCRModal from '../components/ocrModal';
 import axios from 'axios';
+import Insights from '../components/insights';
 
 const PIG_VARIANTS = [
   { filter: 'hue-rotate(0deg)', description: 'Original pink pig' },
@@ -360,11 +361,7 @@ export default function MovingPigsFarmGame() {
           </p>
         )}
 
-        <Link href="/game">
-          <div className="relative bg-[#A1C7BE] m-3 p-2 mx-auto text-center rounded-md w-max text-white hover:bg-[#90b6ad] transition duration-200">
-            Financial Insights
-          </div>
-        </Link>
+        <Insights token={token} />
 
         {isOCRModalOpen && (
           <OCRModal onClose={closeOCR} />

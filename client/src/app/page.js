@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import { motion } from 'framer-motion';
 import AuthModal from "./components/authModal";
 import axios from "axios";
 
@@ -11,6 +10,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [currentPig, setCurrentPig] = useState("/pig.png");
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -45,6 +45,14 @@ export default function Home() {
     validateToken();
   }, [token]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPig(prev => prev === "/pig.png" ? "/pig2.png" : "/pig.png");
+    }, 500); // Switch every 500ms
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLogin = (accessToken) => {
     setToken(accessToken);
     localStorage.setItem('token', accessToken);
@@ -59,33 +67,23 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#E3A7A9] to-purple-100 p-8">
-      <motion.h1
-        className="text-4xl md:text-6xl font-bold mb-12 text-primary"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
+      <h1 className="text-4xl md:text-6xl font-bold mb-12 text-primary">
         Welcome to Pignance!
-      </motion.h1>
+      </h1>
 
       <div className="relative w-96 h-96 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute inset-0 flex flex-col items-center justify-center text-center"
-        >
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           {user ? (
             <>
               <img
-                src="/pig.png"
+                src={currentPig}
                 alt="Piggles"
                 className="w-64 h-64 mb-4"
               />
               <p className="text-2xl font-semibold mb-4">Welcome, {user.email}</p>
               <button 
                 onClick={handleLogout}
-                className="text-xl py-4 px-8 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                className="text-xl py-4 px-8 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out shadow-lg"
               >
                 Logout
               </button>
@@ -93,20 +91,20 @@ export default function Home() {
           ) : (
             <>
               <img
-                src="/pig.png"
+                src={currentPig}
                 alt="Piggles"
                 className="w-64 h-64 mb-4"
               />
               <p className="text-2xl font-semibold mb-4">Start your savings journey!</p>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="text-xl py-4 px-8 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                className="text-xl py-4 px-8 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out shadow-lg"
               >
                 Login/Register
               </button>
             </>
           )}
-        </motion.div>
+        </div>
       </div>
       <AuthModal 
         isOpen={isModalOpen} 

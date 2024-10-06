@@ -23,6 +23,7 @@ export default function OCRModal({ onClose }) {
     const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
     //make a useeffect here to grab all of the user's expenses and log them to the console
     useEffect(() => {
@@ -115,9 +116,11 @@ export default function OCRModal({ onClose }) {
     e.preventDefault();
     setError('');
     setOcrResult(null);
+    setIsProcessing(true);
 
     if (!image) {
       setError('Please select an image');
+      setIsProcessing(false);
       return;
     }
 
@@ -147,6 +150,8 @@ export default function OCRModal({ onClose }) {
     } catch (error) {
       console.error(error);
       setError(error.response?.data?.detail || 'An error occurred during OCR processing');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -303,10 +308,20 @@ export default function OCRModal({ onClose }) {
                 required
                 className="w-full text-white"
               />
-              <button type="submit" className="w-full bg-[#E3A7A9] hover:bg-[#d89598] text-white font-bold py-2 px-4 rounded transition duration-200">
-                Process Image
+              <button 
+                type="submit" 
+                className="w-full bg-[#E3A7A9] hover:bg-[#d89598] text-white font-bold py-2 px-4 rounded transition duration-200"
+                disabled={isProcessing}
+              >
+                {isProcessing ? 'Processing...' : 'Process Image'}
               </button>
             </form>
+            {isProcessing && (
+              <div className="mt-4 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                <p className="text-white mt-2">Processing image, please wait...</p>
+              </div>
+            )}
             {imagePreview && (
               <div className="mt-4">
                 <h4 className="text-white font-bold mb-2">Selected Image:</h4>
