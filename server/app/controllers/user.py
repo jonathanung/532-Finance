@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Query
 from app.models.user import UserCreate, User, Token, Expense, ExpenseCreate
 from app.models.auth import EmailPasswordRequestForm
 from app.utils.auth import create_access_token, get_current_user
@@ -178,10 +178,11 @@ async def create_expense(current_user: User, expense: ExpenseCreate):
     
     result = await db.users.update_one(
         {"email": current_user.email},
-        {"$push": {"expenses": expense_dict}}
+        {"$push": {"expenses": expense_dict}},
     )
     
     if result.modified_count == 1:
+        await add_coin(current_user)
         return {"message": "Expense created successfully", "expense_id": expense_dict['_id']}
     else:
         raise HTTPException(status_code=400, detail="Failed to create expense")
@@ -437,3 +438,61 @@ async def update_budget(current_user: User, budget: float):
         return {"message": "Budget updated successfully"}
     else:
         raise HTTPException(status_code=400, detail="Failed to update budget")
+
+"""Use coins for the current user
+
+Args:
+    current_user (User): The current user
+    coins (int): The coins to use
+
+Returns:
+    dict: The updated coins
+"""
+async def use_coins(current_user: User, coins: int = Query(..., description="Number of coins to use")):
+    print(f"Attempting to use {coins} coins for user {current_user.email}")
+    
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    print(f"User's current coins: {user['coins']}")
+    
+    if user['coins'] < coins:
+        print(f"Not enough coins. User has {user['coins']}, trying to use {coins}")
+        raise HTTPException(status_code=400, detail="Not enough coins")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email, "coins": {"$gte": coins}},
+        {"$inc": {"coins": -coins}}
+    )
+
+    if result.modified_count == 1:
+        updated_user = await db.users.find_one({"email": current_user.email})
+        print(f"Updated user's coins to {updated_user['coins']}")
+        return {"message": "Coins used successfully", "remaining_coins": updated_user['coins']}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to use coins")
+
+
+"""Set the default values for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    dict: The updated user
+"""
+async def set_user_default(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"level": 1, "coins": 0, "budget": 0}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "User default values set successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to set user default values")    

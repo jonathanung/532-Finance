@@ -2,9 +2,44 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 export default function DefaultPage() {
-  const router = useRouter();
+    const router = useRouter();
+    const [token, setToken] = useState(null);
+      useEffect(() => {
+      const validateToken = async () => {
+      if (token) {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+            { 
+              headers: { 
+                Authorization: `Bearer ${token}` 
+              } 
+            }
+          );
+        //   setUser(response.data);
+        //   router.push("/testocr");
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          if (error.response && error.response.status === 401) {
+              handleLogout();
+              router.push("/");
+          }
+        }
+      }
+    };
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      validateToken();
+    }
+    else {
+      router.push("/");
+    }
+  }, []);
 
   const handleLogout = () => {
     router.push('/logout');

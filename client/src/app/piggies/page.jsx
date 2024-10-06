@@ -3,9 +3,44 @@ import Link from 'next/link'
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import axios from 'axios';
+import { useRouter } from "next/navigation";
 
 export default function GameIntro() {
   const [scene, setScene] = useState(0);
+  const [token, setToken] = useState(null);
+  const router = useRouter();
+
+    useEffect(() => {
+      const validateToken = async () => {
+      if (token) {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+            { 
+              headers: { 
+                Authorization: `Bearer ${token}` 
+              } 
+            }
+          );
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          if (error.response && error.response.status === 401) {
+              handleLogout();
+              router.push("/");
+          }
+        }
+      }
+    };
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      validateToken();
+    }
+    else {
+      router.push("/");
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
