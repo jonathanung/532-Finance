@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware as CORS
 import os
 from dotenv import load_dotenv
 
 from app.models.auth import EmailPasswordRequestForm
 from app.controllers import user as user_controller
+from app.controllers import ocr as ocr_controller
 from app.models.user import UserCreate, Token, User
 from app.utils.auth import get_current_user
 
@@ -34,3 +35,8 @@ async def login_for_access_token(form_data: EmailPasswordRequestForm = Depends()
 @app.get("/user")
 async def get_user(current_user: User = Depends(get_current_user)):
     return await user_controller.get_user(current_user)
+
+# OCR ROUTE
+@app.post("/ocr")
+async def ocr_endpoint(image: UploadFile = File(...)):
+    return await ocr_controller.process_ocr(image)
