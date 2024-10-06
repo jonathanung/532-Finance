@@ -11,7 +11,7 @@ function Insights({ token }) {
   const fetchInsights = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/insights`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/insights`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

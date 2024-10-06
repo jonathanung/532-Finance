@@ -16,7 +16,7 @@ export default function GameIntro() {
       if (token) {
         try {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+            `${process.env.NEXT_PUBLIC_API_URL}/user`,
             { 
               headers: { 
                 Authorization: `Bearer ${token}` 

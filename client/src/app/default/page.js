@@ -1,9 +1,9 @@
 "use client";
 
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
 
 export default function DefaultPage() {
     const router = useRouter();
@@ -15,7 +15,7 @@ export default function DefaultPage() {
             if (token) {
                 try {
                     const response = await axios.get(
-                        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+                        `${process.env.NEXT_PUBLIC_API_URL}/user`,
                         { 
                             headers: { 
                                 Authorization: `Bearer ${token}` 
@@ -46,11 +46,11 @@ export default function DefaultPage() {
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, [router, token]);
+    }, [router, token, handleLogout]);
 
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         router.push('/logout');
-    };
+    }, [router]); // Add router to the dependency array
 
     return (
         <main className="min-h-screen flex items-center justify-center p-4 bg-[#E3A7A9]">

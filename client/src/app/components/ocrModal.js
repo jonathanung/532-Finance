@@ -18,57 +18,40 @@ export default function OCRModal({ onClose }) {
   const [expenseType, setExpenseType] = useState('');
   const [expenseDate, setExpenseDate] = useState('');
   const [expenseTotal, setExpenseTotal] = useState('');
-    const [expenseName, setExpenseName] = useState('');
-    const [token, setToken] = useState(null);
-    const router = useRouter();
+  const [expenseName, setExpenseName] = useState('');
+  const [token, setToken] = useState(null);
+  const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-    //make a useeffect here to grab all of the user's expenses and log them to the console
-    useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        if (storedToken) {
-            setToken(storedToken);
-            const fetchExpenses = async () => {
-                try {
-                    const response = await axios.get(
-                        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/expenses`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${storedToken}`
-                            }
-                        }
-                    );
-                    console.log(response.data);
-                } catch (error) {
-                    console.error('Error fetching expenses:', error);
-                    if (error.response && error.response.status === 401) {
-                        console.log('Unauthorized. Redirecting to login...');
-                    }
-                }
-            };
-            fetchExpenses();
-        } else {
-            console.error('No token found. User should be redirected to login.');
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      const fetchExpenses = async () => {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/expenses`,
+            {
+              headers: {
+                Authorization: `Bearer ${storedToken}`
+              }
+            }
+          );
+          console.log(response.data);
+        } catch (error) {
+          console.error('Error fetching expenses:', error);
+          if (error.response && error.response.status === 401) {
+            console.log('Unauthorized. Redirecting to login...');
+          }
         }
-    }, []);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    setRotation(0);
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
       };
-      reader.readAsDataURL(file);
+      fetchExpenses();
     } else {
-      setImagePreview(null);
+      console.error('No token found. User should be redirected to login.');
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (imagePreview) {
@@ -86,7 +69,23 @@ export default function OCRModal({ onClose }) {
     if (imageRef.current) {
       drawRotatedImage();
     }
-  }, [rotation, canvasSize, drawRotatedImage]);
+  }, [rotation, canvasSize]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    setRotation(0);
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
 
   const rotateImage = (degrees) => {
     setRotation((prevRotation) => (prevRotation + degrees + 360) % 360);
@@ -135,7 +134,7 @@ export default function OCRModal({ onClose }) {
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/ocr`,
+        `${process.env.NEXT_PUBLIC_API_URL}/ocr`,
         formData,
         {
           headers: {
@@ -193,15 +192,15 @@ export default function OCRModal({ onClose }) {
 
   const handleExpenseSubmit = async (e) => {
     e.preventDefault();
-      try {
-          console.log({ expenseType, expenseDate, expenseTotal, expenseName });
+    try {
+      console.log({ expenseType, expenseDate, expenseTotal, expenseName });
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/expenses`,
+        `${process.env.NEXT_PUBLIC_API_URL}/expenses`,
         {
-        expenseType,
-        expenseDate,
-        expenseTotal: parseFloat(expenseTotal),
-        expenseName
+          expenseType,
+          expenseDate,
+          expenseTotal: parseFloat(expenseTotal),
+          expenseName
         },
         {
           headers: {
@@ -216,8 +215,8 @@ export default function OCRModal({ onClose }) {
       setExpenseDate('');
       setExpenseTotal('');
       setExpenseName('');
-          // You might want to show a success message to the user here
-    onClose();
+      // You might want to show a success message to the user here
+      onClose();
     } catch (error) {
       console.error('Error submitting expense:', error);
       setError(error.response?.data?.detail || 'An error occurred while submitting the expense');

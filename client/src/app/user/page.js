@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+
 export default function UserPage() {
   const [user, setUser] = useState({ firstName: '', lastName: '', email: '', budget: '' });
   const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ export default function UserPage() {
     } else {
       router.push("/");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const imageInterval = setInterval(() => {
@@ -40,11 +41,11 @@ export default function UserPage() {
       clearInterval(imageInterval);
       clearInterval(moveInterval);
     };
-  }, []);
+  }, [router]);
 
   const fetchUserData = async (token) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -73,7 +74,7 @@ export default function UserPage() {
       return;
     }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/change_password`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/change_password`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,7 +102,7 @@ export default function UserPage() {
   const handleDeleteAccount = async () => {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       try { 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/delete`, { method: 'DELETE' });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/delete`, { method: 'DELETE' });
         if (response.ok) {
           alert('Account deleted successfully');
           router.push('/login'); // Redirect to login page after deletion
@@ -119,7 +120,7 @@ export default function UserPage() {
     e.preventDefault();
     try {
       console.log('Sending budget update:', { budget: parseFloat(budget) });
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/budget`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/budget`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

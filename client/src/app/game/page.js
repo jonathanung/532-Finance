@@ -5,9 +5,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { useRouter } from "next/navigation";
-import OCRModal from '../components/ocrModal';
 import axios from 'axios';
 import Insights from '../components/insights';
+import dynamic from 'next/dynamic';
+
+const OCRModal = dynamic(() => import('../components/ocrModal'), {
+  ssr: false,
+});
 
 const PIG_VARIANTS = [
   { filter: 'hue-rotate(0deg)', description: 'Original pink pig' },
@@ -68,7 +72,7 @@ export default function MovingPigsFarmGame() {
       if (token) {
         try {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+            `${process.env.NEXT_PUBLIC_API_URL}/user`,
             { 
               headers: { 
                 Authorization: `Bearer ${token}` 
@@ -93,15 +97,15 @@ export default function MovingPigsFarmGame() {
     else {
       router.push("/");
     }
-  }, []);
+  }, [router, token]);
 
   const fetchUserData = async (token) => {
     try {
       const [levelResponse, coinsResponse] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level`, {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/level`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/coins`, {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/coins`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -119,7 +123,7 @@ export default function MovingPigsFarmGame() {
     if (level >= 1 && level <= PIG_VARIANTS.length) {
       try {
         const response = await axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level`,
+          `${process.env.NEXT_PUBLIC_API_URL}/level`,
           { level },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -139,7 +143,7 @@ export default function MovingPigsFarmGame() {
   const setCoinsDirectly = async (amount) => {
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/coins`,
+        `${process.env.NEXT_PUBLIC_API_URL}/coins`,
         { coins: amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -152,7 +156,7 @@ export default function MovingPigsFarmGame() {
   useEffect(() => {
     console.log('Effect triggered. Farm level:', farmLevel, 'Current scene:', currentScene);
     movePigs();
-  }, [farmLevel, currentScene])
+  }, [movePigs]);
 
   const movePigs = () => {
     console.log('Current farm level:', farmLevel, typeof farmLevel);
@@ -206,7 +210,7 @@ export default function MovingPigsFarmGame() {
       try {
         console.log('Sending use_coins request. Coins to use:', cost);
         const useCoinsResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/use_coins?coins=${cost}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/use_coins?coins=${cost}`,
           {},  // Empty body
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -217,7 +221,7 @@ export default function MovingPigsFarmGame() {
         
         console.log('Sending level_up request');
         const levelUpResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level_up`,
+          `${process.env.NEXT_PUBLIC_API_URL}/level_up`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log('level_up response:', levelUpResponse.data);

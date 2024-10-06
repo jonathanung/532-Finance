@@ -40,7 +40,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
     const endpoint = isLogin ? 'token' : 'register';
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/${endpoint}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/${endpoint}`,
         isLogin
           ? new URLSearchParams({ email, password }).toString()
           : { first_name: firstName, last_name: lastName, email, password },
