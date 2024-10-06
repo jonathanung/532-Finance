@@ -124,23 +124,44 @@ async def update_user(current_user: User = Depends(get_current_user)):
     return await user_controller.update_user(current_user)
 """
 
-async def update_user(current_user: User = Depends(get_current_user)):
+async def update_user (updated_user: UserCreate, current_user: User = Depends(get_current_user)):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
         raise HTTPException(
-            status_code=400, 
-            detail="Email wasn't registered"
-            )
-    
-    hashed_password = bcrypt.hashpw(
-        current_user.password.encode(os.getenv("ENCODING_TYPE")),
-        bcrypt.gensalt()
+            status_code=404, 
+            detail="User not found"
         )
     
-    await db.users.replace_one({"password":hashed_password})
+    update_data = updated_user.dict(exclude_unset=True)
+    
+    if "password" in update_data:
+        hashed_password = bcrypt.hashpw(
+            update_data["password"].encode(os.getenv("ENCODING_TYPE", "utf-8")),
+            bcrypt.gensalt()
+        )
+        update_data["password"] = hashed_password
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="User update failed")
+    
     return {
         "message": "User updated successfully"
     }
+
+"""Create an expense for the current user
+
+Args:
+    current_user (User): The current user
+    expense (ExpenseCreate): The expense to create
+
+Returns:
+    dict: The created expense
+"""
 async def create_expense(current_user: User, expense: ExpenseCreate):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
@@ -162,6 +183,14 @@ async def create_expense(current_user: User, expense: ExpenseCreate):
     else:
         raise HTTPException(status_code=400, detail="Failed to create expense")
 
+"""Get the expenses for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    list: The expenses for the current user
+"""
 async def get_expenses(current_user: User):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
@@ -169,6 +198,15 @@ async def get_expenses(current_user: User):
     
     return user.get("expenses", [])
 
+"""Get an expense for the current user
+
+Args:
+    current_user (User): The current user
+    expense_id (str): The ID of the expense to get
+
+Returns:
+    dict: The expense with the given ID
+"""
 async def get_expense(current_user: User, expense_id: str):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
@@ -180,6 +218,14 @@ async def get_expense(current_user: User, expense_id: str):
     
     return expense
 
+"""Update an expense for the current user
+
+Args:
+    current_user (User): The current user
+    expense_id (str): The ID of the expense to update
+    updated_expense (Expense): The updated expense
+
+"""
 async def update_expense(current_user: User, expense_id: str, updated_expense: Expense):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
@@ -200,6 +246,15 @@ async def update_expense(current_user: User, expense_id: str, updated_expense: E
     else:
         raise HTTPException(status_code=404, detail="Expense not found or not updated")
 
+"""Delete an expense for the current user
+
+Args:
+    current_user (User): The current user
+    expense_id (str): The ID of the expense to delete
+
+Returns:  
+    dict: The deleted expense
+"""
 async def delete_expense(current_user: User, expense_id: str):
     user = await db.users.find_one({"email": current_user.email})
     if not user:
@@ -214,3 +269,64 @@ async def delete_expense(current_user: User, expense_id: str):
         return {"message": "Expense deleted successfully"}
     else:
         raise HTTPException(status_code=404, detail="Expense not found or not deleted")
+
+
+"""Get the level for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    int: The level for the current user
+"""
+async def get_level(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user.get("level", 1)
+
+"""Update the level for the current user
+
+Args:
+    current_user (User): The current user
+    level (int): The level to update
+
+Returns:
+    dict: The updated level
+"""
+async def update_level(current_user: User, level: int):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"level": level}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "Level updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to update level")
+
+"""Level up the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    dict: The leveled up user
+"""
+async def level_up(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    level = user.get("level", 1)
+    if level >= 10:
+        return {"message": "User has reached the maximum level"}
+    
+    new_level = level + 1
+    await update_level(current_user, new_level)
+    return {"message": "User leveled up successfully"}

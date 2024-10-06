@@ -80,7 +80,7 @@ export default function GameIntro() {
           )}
           {scene === 4 && (
             <>
-              <Link href="/game">
+              <Link href="/default">
                 <div 
                   className="text-2xl py-8 px-12 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg"
                 >

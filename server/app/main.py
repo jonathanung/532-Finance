@@ -24,6 +24,7 @@ app.add_middleware(
 )
 
 # USER ROUTES
+
 @app.post("/register", status_code=201)
 async def register(user: UserCreate):
     return await user_controller.register(user)
@@ -40,16 +41,18 @@ async def get_user(current_user: User = Depends(get_current_user)):
 async def delete_user(current_user: User = Depends(get_current_user)):
     return await user_controller.delete_user(current_user)
 
-@app.update("/update")
-async def update_user(current_user: User = Depends(get_current_user)):
-    return await user_controller.update_user(current_user)
+@app.put("/update")
+async def update_user(updated_user: UserCreate, current_user: User = Depends(get_current_user)):
+    return await user_controller.update_user(updated_user, current_user)
 
 # OCR ROUTE
+
 @app.post("/ocr")
 async def ocr_endpoint(image: UploadFile = File(...)):
     return await ocr_controller.process_ocr(image)
 
 # EXPENSE ROUTES
+
 @app.post("/expenses")
 async def create_expense(expense: ExpenseCreate, current_user: User = Depends(get_current_user)):
     return await user_controller.create_expense(current_user, expense)
@@ -69,3 +72,18 @@ async def update_expense(expense: ExpenseCreate, expense_id: str = Path(...), cu
 @app.delete("/expenses/{expense_id}")
 async def delete_expense(expense_id: str = Path(...), current_user: User = Depends(get_current_user)):
     return await user_controller.delete_expense(current_user, expense_id)
+
+
+# LEVEL ROUTES
+
+@app.get("/level")
+async def get_level(current_user: User = Depends(get_current_user)):
+    return await user_controller.get_level(current_user)
+
+@app.put("/level")
+async def update_level(level: int, current_user: User = Depends(get_current_user)):
+    return await user_controller.update_level(current_user, level)
+
+@app.get("/level_up")
+async def level_up(current_user: User = Depends(get_current_user)):
+    return await user_controller.level_up(current_user)
