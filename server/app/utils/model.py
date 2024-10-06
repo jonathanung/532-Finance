@@ -67,17 +67,17 @@ def parse_json_like_string(json_like_string):
     return result
 
 async def process_receipt(receipt_data, **kwargs):
-    logger.debug(f"Received receipt_data: {receipt_data}")
+    # logger.debug(f"Received receipt_data: {receipt_data}")
     
     if isinstance(receipt_data, dict) and 'text' in receipt_data:
         receipt_text = receipt_data['text']
     else:
         receipt_text = receipt_data
 
-    logger.debug(f"Extracted receipt_text: {receipt_text}")
+    # logger.debug(f"Extracted receipt_text: {receipt_text}")
 
     full_prompt = RECEIPT_CONTEXT + receipt_text
-    logger.debug(f"Full prompt: {full_prompt}")
+    # logger.debug(f"Full prompt: {full_prompt}")
 
     max_new_tokens = 400
     temperature = 0.3
@@ -102,18 +102,18 @@ async def process_receipt(receipt_data, **kwargs):
             response_data = await res.json()
             generated_text = response_data[0]["generated_text"]
     
-    logger.debug(f"LLM Generated Text: {generated_text}")
+    # logger.debug(f"LLM Generated Text: {generated_text}")
     
     try:
         # First, try to find a JSON-like structure
         json_match = re.search(r'\{.*\}', generated_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(0)
-            logger.debug(f"Extracted JSON-like string: {json_str}")
+            # logger.debug(f"Extracted JSON-like string: {json_str}")
             
             # Use our custom parser
             receipt_json = parse_json_like_string(json_str)
-            logger.debug(f"Parsed receipt_json: {receipt_json}")
+            # logger.debug(f"Parsed receipt_json: {receipt_json}")
         else:
             raise ValueError("No JSON object found in the generated text")
         
@@ -123,7 +123,7 @@ async def process_receipt(receipt_data, **kwargs):
                 receipt_json["expense-type"] = closest_match[0]
             else:
                 receipt_json["expense-type"] = "needs"  # Default to "needs" if no close match is found
-            logger.debug(f"Corrected expense-type to: {receipt_json['expense-type']}")
+            # logger.debug(f"Corrected expense-type to: {receipt_json['expense-type']}")
 
         cleaned_json = {
             "expense-type": receipt_json.get("expense-type", "needs"),
@@ -132,7 +132,7 @@ async def process_receipt(receipt_data, **kwargs):
             "expense-name": receipt_json.get("expense-name", "Unknown Expense")
         }
         
-        logger.debug(f"Final cleaned_json: {cleaned_json}")
+        # logger.debug(f"Final cleaned_json: {cleaned_json}")
         return cleaned_json
     except Exception as e:
         logger.error(f"Error parsing JSON-like string: {e}")
