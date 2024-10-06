@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, UploadFile, File
+from fastapi import FastAPI, Depends, UploadFile, File, Path, HTTPException
 from fastapi.middleware.cors import CORSMiddleware as CORS
 import os
 from dotenv import load_dotenv
@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from app.models.auth import EmailPasswordRequestForm
 from app.controllers import user as user_controller
 from app.controllers import ocr as ocr_controller
-from app.models.user import UserCreate, Token, User
+from app.models.user import UserCreate, Token, User, ExpenseCreate, Expense  # Update this import
 from app.utils.auth import get_current_user
 
 load_dotenv()
@@ -40,3 +40,24 @@ async def get_user(current_user: User = Depends(get_current_user)):
 @app.post("/ocr")
 async def ocr_endpoint(image: UploadFile = File(...)):
     return await ocr_controller.process_ocr(image)
+
+# EXPENSE ROUTES
+@app.post("/expenses")
+async def create_expense(expense: ExpenseCreate, current_user: User = Depends(get_current_user)):
+    return await user_controller.create_expense(current_user, expense)
+
+@app.get("/expenses")
+async def get_expenses(current_user: User = Depends(get_current_user)):
+    return await user_controller.get_expenses(current_user)
+
+@app.get("/expenses/{expense_id}")
+async def get_expense(expense_id: str = Path(...), current_user: User = Depends(get_current_user)):
+    return await user_controller.get_expense(current_user, expense_id)
+
+@app.put("/expenses/{expense_id}")
+async def update_expense(expense: ExpenseCreate, expense_id: str = Path(...), current_user: User = Depends(get_current_user)):
+    return await user_controller.update_expense(current_user, expense_id, expense)
+
+@app.delete("/expenses/{expense_id}")
+async def delete_expense(expense_id: str = Path(...), current_user: User = Depends(get_current_user)):
+    return await user_controller.delete_expense(current_user, expense_id)
