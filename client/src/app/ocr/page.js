@@ -19,14 +19,8 @@ export default function OCRPage() {
     const [expenseName, setExpenseName] = useState('');
     const [token, setToken] = useState(null);
     const router = useRouter();
-useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-    }
-  }, []);
-useEffect(() => {
-    const validateToken = async () => {
+  useEffect(() => {
+      const validateToken = async () => {
       if (token) {
         try {
           const response = await axios.get(
@@ -48,9 +42,15 @@ useEffect(() => {
         }
       }
     };
-
-    validateToken();
-}, [token]);
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      validateToken();
+    }
+    else {
+      router.push("/");
+    }
+  }, []);
     
     //make a useeffect here to grab all of the user's expenses and log them to the console
     useEffect(() => {

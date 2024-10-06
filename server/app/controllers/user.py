@@ -178,10 +178,11 @@ async def create_expense(current_user: User, expense: ExpenseCreate):
     
     result = await db.users.update_one(
         {"email": current_user.email},
-        {"$push": {"expenses": expense_dict}}
+        {"$push": {"expenses": expense_dict}},
     )
     
     if result.modified_count == 1:
+        await add_coin(current_user)
         return {"message": "Expense created successfully", "expense_id": expense_dict['_id']}
     else:
         raise HTTPException(status_code=400, detail="Failed to create expense")
@@ -437,3 +438,51 @@ async def update_budget(current_user: User, budget: float):
         return {"message": "Budget updated successfully"}
     else:
         raise HTTPException(status_code=400, detail="Failed to update budget")
+
+"""Use coins for the current user
+
+Args:
+    current_user (User): The current user
+    coins (int): The coins to use
+
+Returns:
+    dict: The updated coins
+"""
+async def use_coins(current_user: User, coins: int):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$inc": {"coins": -coins}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "Coins used successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to use coins")
+
+
+"""Set the default values for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    dict: The updated user
+"""
+async def set_user_default(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"level": 1, "coins": 0, "budget": 0}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "User default values set successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to set user default values")    

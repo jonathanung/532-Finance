@@ -47,7 +47,7 @@ Args:
 Returns:
     str: The processed receipt data
 """
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def parse_json_like_string(json_like_string):

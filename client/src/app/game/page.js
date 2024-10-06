@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { useRouter } from "next/navigation";
+import OCRModal from '../components/ocrModal';
+import axios from 'axios';
 
 const PIG_VARIANTS = [
   { filter: 'hue-rotate(0deg)', description: 'Original pink pig' },
@@ -48,43 +51,186 @@ const SCENE_ITEMS = [
 ]
 
 const PIGS_PER_SCENE = 5
-const TOTAL_SCENES = 3
+const TOTAL_SCENES = 6
 
 export default function MovingPigsFarmGame() {
+  const router = useRouter();
+  const [token, setToken] = useState(null);
   const [coins, setCoins] = useState(3)
   const [farmLevel, setFarmLevel] = useState(1)
   const [pigPositions, setPigPositions] = useState([])
   const [currentScene, setCurrentScene] = useState(0)
+  const [isOCRModalOpen, setIsOCRModalOpen] = useState(false);
 
   useEffect(() => {
-    movePigs()
+      const validateToken = async () => {
+      if (token) {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/user`,
+            { 
+              headers: { 
+                Authorization: `Bearer ${token}` 
+              } 
+            }
+          );
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          if (error.response && error.response.status === 401) {
+              handleLogout();
+              router.push("/");
+          }
+        }
+      }
+    };
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      validateToken();
+      fetchUserData(storedToken);
+    }
+    else {
+      router.push("/");
+    }
+  }, []);
+
+  const fetchUserData = async (token) => {
+    try {
+      const [levelResponse, coinsResponse] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/coins`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      console.log('Level response:', levelResponse.data);
+      console.log('Coins response:', coinsResponse.data);
+      setFarmLevel(levelResponse.data);
+      setCoins(coinsResponse.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  const setFarmLevelDirectly = async (level) => {
+    console.log('Setting farm level to:', level);
+    if (level >= 1 && level <= PIG_VARIANTS.length) {
+      try {
+        const response = await axios.put(
+          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level`,
+          { level },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log('Server response for setting level:', response.data);
+        setFarmLevel(level);
+        const newScene = Math.min(Math.floor((level - 1) / PIGS_PER_SCENE), TOTAL_SCENES - 1);
+        console.log('New scene calculated:', newScene);
+        setCurrentScene(newScene);
+      } catch (error) {
+        console.error("Error updating farm level:", error);
+      }
+    } else {
+      console.warn(`Invalid farm level: ${level}. Level must be between 1 and ${PIG_VARIANTS.length}.`);
+    }
+  };
+
+  const setCoinsDirectly = async (amount) => {
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/coins`,
+        { coins: amount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCoins(amount);
+    } catch (error) {
+      console.error("Error updating coins:", error);
+    }
+  };
+
+  useEffect(() => {
+    console.log('Effect triggered. Farm level:', farmLevel, 'Current scene:', currentScene);
+    movePigs();
   }, [farmLevel, currentScene])
 
   const movePigs = () => {
-    const pigsInScene = Math.min(farmLevel - currentScene * PIGS_PER_SCENE, PIGS_PER_SCENE)
-    const newPositions = Array(pigsInScene).fill(0).map(() => ({
-      left: Math.random() * 80 + 10,
-      bottom: Math.random() * 30 + 10,
-    }))
-    setPigPositions(newPositions)
-  }
+    console.log('Current farm level:', farmLevel, typeof farmLevel);
+    console.log('Current scene:', currentScene, typeof currentScene);
+    console.log('PIGS_PER_SCENE:', PIGS_PER_SCENE, typeof PIGS_PER_SCENE);
 
-  const upgradeFarm = () => {
+    if (typeof farmLevel !== 'number' || isNaN(farmLevel)) {
+      console.error('Invalid farmLevel:', farmLevel);
+      return;
+    }
+
+    if (typeof currentScene !== 'number' || isNaN(currentScene)) {
+      console.error('Invalid currentScene:', currentScene);
+      return;
+    }
+
+    const pigsInSceneRaw = farmLevel - currentScene * PIGS_PER_SCENE;
+    console.log('Raw pigs in scene:', pigsInSceneRaw);
+
+    if (isNaN(pigsInSceneRaw)) {
+      console.error('pigsInSceneRaw is NaN. farmLevel:', farmLevel, 'currentScene:', currentScene, 'PIGS_PER_SCENE:', PIGS_PER_SCENE);
+      return;
+    }
+
+    const pigsInScene = Math.max(0, Math.min(pigsInSceneRaw, PIGS_PER_SCENE));
+    console.log('Adjusted pigs in scene:', pigsInScene);
+
+    if (pigsInScene < 0 || !Number.isInteger(pigsInScene) || isNaN(pigsInScene)) {
+      console.error('Invalid pigsInScene value:', pigsInScene);
+      return;
+    }
+
+    try {
+      const newPositions = Array(pigsInScene).fill(0).map(() => ({
+        left: Math.random() * 80 + 10,
+        bottom: Math.random() * 30 + 10,
+      }));
+      setPigPositions(newPositions);
+    } catch (error) {
+      console.error('Error in movePigs:', error);
+    }
+  };
+
+  const upgradeFarm = async () => {
     const isExpanding = farmLevel % PIGS_PER_SCENE === 0
     const cost = isExpanding ? 5 : 3
     
     if (coins >= cost && farmLevel < PIG_VARIANTS.length) {
-      setCoins(coins - cost)
-      setFarmLevel(prev => prev + 1)
-      
-      if (isExpanding && currentScene < TOTAL_SCENES - 1) {
-        setCurrentScene(prev => prev + 1)
+      try {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/use_coins`,
+          { coins: cost },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level_up`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setCoins(coins - cost);
+        setFarmLevel(prev => prev + 1);
+        
+        if (isExpanding && currentScene < TOTAL_SCENES - 1) {
+          setCurrentScene(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error("Error upgrading farm:", error);
       }
     }
+  };
+
+  const openOCR = () => {
+    setIsOCRModalOpen(true);
   }
 
-  const earnCoins = () => {
-    setCoins(prev => prev + 1)
+  const closeOCR = () => {
+    setIsOCRModalOpen(false);
+    fetchUserData(token);
   }
 
   const nextScene = () => {
@@ -182,7 +328,7 @@ export default function MovingPigsFarmGame() {
             {upgradeButtonText} ({upgradeCost} coins)
           </button>
           <button
-            onClick={earnCoins}
+            onClick={openOCR}
             className="w-full bg-[#A1C7BE] hover:bg-[#90b6ad] text-white font-bold py-2 px-4 rounded transition duration-200"
           >
             Upload your Receipt
@@ -204,6 +350,26 @@ export default function MovingPigsFarmGame() {
             Financial Insights
           </div>
         </Link>
+
+        {isOCRModalOpen && (
+          <OCRModal onClose={closeOCR} />
+        )}
+        
+        {/* For testing purposes, you can add these buttons: */}
+        <div className="mt-4 space-y-2">
+          <button
+            onClick={() => setFarmLevelDirectly(10)}
+            className="w-full bg-[#A1C7BE] hover:bg-[#90b6ad] text-white font-bold py-2 px-4 rounded transition duration-200"
+          >
+            Set Farm Level to 10
+          </button>
+          <button
+            onClick={() => setCoinsDirectly(50)}
+            className="w-full bg-[#A1C7BE] hover:bg-[#90b6ad] text-white font-bold py-2 px-4 rounded transition duration-200"
+          >
+            Set Coins to 50
+          </button>
+        </div>
       </div>
     </div>
   )
