@@ -67,3 +67,5 @@ ENV/
 .vscode/
 .idea/
 .env_local
+
+.DS_Store
