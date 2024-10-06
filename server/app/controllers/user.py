@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Query
 from app.models.user import UserCreate, User, Token, Expense, ExpenseCreate
 from app.models.auth import EmailPasswordRequestForm
 from app.utils.auth import create_access_token, get_current_user
@@ -448,18 +448,28 @@ Args:
 Returns:
     dict: The updated coins
 """
-async def use_coins(current_user: User, coins: int):
+async def use_coins(current_user: User, coins: int = Query(..., description="Number of coins to use")):
+    print(f"Attempting to use {coins} coins for user {current_user.email}")
+    
     user = await db.users.find_one({"email": current_user.email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    print(f"User's current coins: {user['coins']}")
+    
+    if user['coins'] < coins:
+        print(f"Not enough coins. User has {user['coins']}, trying to use {coins}")
+        raise HTTPException(status_code=400, detail="Not enough coins")
+    
     result = await db.users.update_one(
-        {"email": current_user.email},
+        {"email": current_user.email, "coins": {"$gte": coins}},
         {"$inc": {"coins": -coins}}
     )
 
     if result.modified_count == 1:
-        return {"message": "Coins used successfully"}
+        updated_user = await db.users.find_one({"email": current_user.email})
+        print(f"Updated user's coins to {updated_user['coins']}")
+        return {"message": "Coins used successfully", "remaining_coins": updated_user['coins']}
     else:
         raise HTTPException(status_code=400, detail="Failed to use coins")
 
