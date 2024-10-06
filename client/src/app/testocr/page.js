@@ -47,6 +47,7 @@ export default function OCRPage() {
           },
         }
       );
+      console.log(response.data);
       setResult(response.data);
     } catch (error) {
       console.error(error);

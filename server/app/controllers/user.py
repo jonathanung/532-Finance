@@ -5,7 +5,6 @@ from app.utils.auth import create_access_token, get_current_user
 from app.db import db
 from datetime import timedelta
 import bcrypt
-from app.utils.model import pipe
 from dotenv import load_dotenv
 import os
 

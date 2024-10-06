@@ -3,8 +3,10 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import LoginModal from "./components/loginModal";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
@@ -29,6 +31,7 @@ export default function Home() {
             }
           );
           setUser(response.data);
+          router.push("/testocr");
         } catch (error) {
           console.error("Token validation failed:", error);
           if (error.response && error.response.status === 401) {

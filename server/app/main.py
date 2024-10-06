@@ -46,4 +46,4 @@ async def update_user(current_user: User = Depends(get_current_user)):
 # OCR ROUTE
 @app.post("/ocr")
 async def ocr_endpoint(image: UploadFile = File(...)):
-    return await ocr_controller.process_image(image)
+    return await ocr_controller.process_ocr(image)
