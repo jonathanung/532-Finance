@@ -12,15 +12,6 @@ class ExpenseCreate(BaseModel):
     class Config:
         populate_by_name = True
 
-class Expense(ExpenseCreate):
-    id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-
-    class Config:
-        populate_by_name = True
-        json_encoders = {
-            ObjectId: lambda v: str(v)
-        }
-
 class Expense(BaseModel):
     expense_type: str = Field(..., alias="expense-type")
     date: date

@@ -128,3 +128,7 @@ async def use_coins(coins: int, current_user: User = Depends(get_current_user)):
 @app.get("/set_user_default")
 async def set_user_default(current_user: User = Depends(get_current_user)):
     return await user_controller.set_user_default(current_user)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

@@ -7,9 +7,5 @@ pydantic[email]
 python-multipart
 bcrypt
 python-jose[cryptography]
-pillow
-pytesseract
-transformers
-torch
-aiohttp
 pyjwt
+aiohttp
