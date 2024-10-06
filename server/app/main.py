@@ -73,7 +73,6 @@ async def update_expense(expense: ExpenseCreate, expense_id: str = Path(...), cu
 async def delete_expense(expense_id: str = Path(...), current_user: User = Depends(get_current_user)):
     return await user_controller.delete_expense(current_user, expense_id)
 
-
 # LEVEL ROUTES
 
 @app.get("/level")
@@ -87,3 +86,27 @@ async def update_level(level: int, current_user: User = Depends(get_current_user
 @app.get("/level_up")
 async def level_up(current_user: User = Depends(get_current_user)):
     return await user_controller.level_up(current_user)
+
+# BUDGET ROUTES
+
+@app.get("/budget")
+async def get_budget(current_user: User = Depends(get_current_user)):
+    return await user_controller.get_budget(current_user)
+
+@app.put("/budget")
+async def update_budget(budget: float, current_user: User = Depends(get_current_user)):
+    return await user_controller.update_budget(current_user, budget)
+
+# COINS ROUTES
+
+@app.get("/coins")
+async def get_coins(current_user: User = Depends(get_current_user)):
+    return await user_controller.get_coins(current_user)
+
+@app.put("/coins")
+async def update_coins(coins: int, current_user: User = Depends(get_current_user)):
+    return await user_controller.update_coins(current_user, coins)
+
+@app.get("/add_coin")
+async def add_coin(current_user: User = Depends(get_current_user)):
+    return await user_controller.add_coin(current_user)

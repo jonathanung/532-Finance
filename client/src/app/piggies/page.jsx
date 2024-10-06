@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 export default function GameIntro() {
-  const [scene, setScene] = useState(0)
+  const [scene, setScene] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -82,8 +82,7 @@ export default function GameIntro() {
             <>
               <Link href="/default">
                 <div 
-                  className="text-2xl py-8 px-12 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-                >
+                  className="text-2xl py-8 px-12 rounded-full bg-[#A8AAC7] hover:bg-[#8A8BB5] text-black font-bold cursor-pointer transition-all transform hover:scale-105 shadow-lg">
                   Start Saving Now!
                 </div>
               </Link>

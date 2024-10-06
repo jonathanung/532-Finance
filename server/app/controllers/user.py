@@ -42,7 +42,10 @@ async def register(user: UserCreate):
         "last_name": user.last_name,
         "email": user.email, 
         "hashed_password": hashed_password,
-        "expenses": []
+        "expenses": [],
+        "coins": 0,
+        "level": 1,
+        "budget": 0
     }
     result = await db.users.insert_one(new_user)
 
@@ -330,3 +333,107 @@ async def level_up(current_user: User):
     new_level = level + 1
     await update_level(current_user, new_level)
     return {"message": "User leveled up successfully"}
+
+"""Get the coins for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    int: The coins for the current user
+"""
+async def get_coins(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user.get("coins", 0)
+
+
+"""Update the coins for the current user
+
+Args:
+    current_user (User): The current user
+    coins (int): The coins to update
+
+Returns:
+    dict: The updated coins
+"""
+async def update_coins(current_user: User, coins: int):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"coins": coins}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "Coins updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to update coins")
+
+
+
+"""Add 1 coin to the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    dict: The updated coins
+"""
+async def add_coin(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$inc": {"coins": 1}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "Coin added successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to add coin")
+
+"""Get the budget for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    float: The budget for the current user
+"""
+async def get_budget(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user.get("budget", 0)
+
+"""Update the budget for the current user
+
+Args:
+    current_user (User): The current user
+    budget (float): The budget to update
+
+Returns:
+    dict: The updated budget
+"""
+async def update_budget(current_user: User, budget: float):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"budget": budget}}
+    )
+
+    if result.modified_count == 1:
+        return {"message": "Budget updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to update budget")
