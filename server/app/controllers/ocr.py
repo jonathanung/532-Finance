@@ -1,7 +1,7 @@
-from fastapi import UploadFile, HTTPException
-from app.utils.model import process_receipt
-from PIL import Image
+from ..utils.model import process_receipt_data
+from fastapi import HTTPException
 import pytesseract
+from PIL import Image
 import io
 
 """Process the image
@@ -12,14 +12,11 @@ Args:
 Returns:
     dict: The processed image
 """
-async def process_image(image: UploadFile):
-    if not image.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="File provided is not an image")
+async def process_ocr(file):
     try:
-        contents = await image.read()
-        img = Image.open(io.BytesIO(contents))
-        text = pytesseract.image_to_string(img)
-        receipt_data = process_receipt(text)
+        image = Image.open(io.BytesIO(await file.read()))
+        extracted_text = pytesseract.image_to_string(image)
+        receipt_data = await process_receipt_data(extracted_text)
         return receipt_data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred during OCR processing: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
