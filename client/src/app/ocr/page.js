@@ -52,6 +52,7 @@ useEffect(() => {
     validateToken();
 }, [token]);
     
+
     //make a useeffect here to grab all of the user's expenses and log them to the console
     useEffect(() => {
         const fetchExpenses = async () => {
