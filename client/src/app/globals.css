@@ -7,12 +7,12 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* @media (prefers-color-scheme: dark) { */
+  /* :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   color: var(--foreground);
@@ -24,4 +24,38 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.ocr-page {
+  display: flex;
+  gap: 2rem;
+}
+
+.ocr-section {
+  flex: 1;
+}
+
+.expense-form-section {
+  flex: 1;
+}
+
+.expense-form-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.expense-form-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.expense-form-section input {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.expense-form-section button {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
 }
