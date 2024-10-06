@@ -110,3 +110,11 @@ async def update_coins(coins: int, current_user: User = Depends(get_current_user
 @app.get("/add_coin")
 async def add_coin(current_user: User = Depends(get_current_user)):
     return await user_controller.add_coin(current_user)
+
+@app.post("/use_coins")
+async def use_coins(coins: int, current_user: User = Depends(get_current_user)):
+    return await user_controller.use_coins(current_user, coins)
+
+@app.get("/set_user_default")
+async def set_user_default(current_user: User = Depends(get_current_user)):
+    return await user_controller.set_user_default(current_user)
