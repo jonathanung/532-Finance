@@ -38,6 +38,27 @@ Receipt data:
 
 EXPENSE_TYPES = ["needs", "wants", "savings"]
 
+INSIGHTS_CONTEXT = """
+You are an AI assistant that provides personalized financial insights for kids and teens.
+Based on user expenses, categorize each transaction as needs, wants, or savings, and calculate the percentage that each category represents relative to total expenses. 
+Use these percentages to generate tailored suggestions for better budget management, offering insights to help the user achieve financial balance.
+Provide advice that encourages responsible spending and saving. 
+
+Expenses are in the format:
+{
+    "expense-type": "needs" | "wants" | "savings",
+    "expenseDate": "YYYY-MM-DD",
+    "expenseName": "Expense Name",
+    "expenseAmount": "Expense Amount"
+}
+
+Budget is the total amount of money the user has set for their budget in dollars for the month.
+
+I only want the insights worded for a 13 year old, nothing but plain text should be returned.
+
+User data:
+"""
+
 """Process the receipt data
 
 Args:
@@ -66,6 +87,16 @@ def parse_json_like_string(json_like_string):
     
     return result
 
+
+"""Process the receipt data
+
+Args:
+    receipt_data (dict): The receipt data to process
+    **kwargs: Additional keyword arguments
+
+Returns:
+    str: The processed receipt data
+"""
 async def process_receipt(receipt_data, **kwargs):
     # logger.debug(f"Received receipt_data: {receipt_data}")
     
@@ -147,3 +178,43 @@ async def process_receipt(receipt_data, **kwargs):
         return default_json
 
 process_receipt_data = process_receipt
+
+"""Get the insights for the current user
+
+Args:
+    user_data (dict): The user data to process
+    **kwargs: Additional keyword arguments
+
+Returns:
+    str: The processed user data
+"""
+async def get_insights(user_data, **kwargs):
+    full_prompt = INSIGHTS_CONTEXT + json.dumps(user_data)
+    # logger.debug(f"Full prompt: {full_prompt}")
+
+    max_new_tokens = 400
+    temperature = 0.8
+    repetition_penalty = 1.3
+    top_k = 50
+    top_p = 0.95
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"http://{LLM_HOST}:{LLM_PORT}/prompt",
+            json={
+                "prompt": full_prompt,
+                "return_full_text": False,
+                "max_new_tokens": max_new_tokens,
+                "temperature": temperature,
+                "repetition_penalty": repetition_penalty,
+                "top_k": top_k,
+                "top_p": top_p,
+                **kwargs
+            }
+        ) as res:
+            response_data = await res.json()
+            generated_text = response_data[0]["generated_text"]
+            # print(generated_text)
+    return {"insights": generated_text}
+    
+get_insights_data = get_insights

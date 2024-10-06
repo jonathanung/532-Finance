@@ -1,5 +1,5 @@
 from fastapi import HTTPException, Depends, status, Query
-from app.models.user import UserCreate, User, Token, Expense, ExpenseCreate
+from app.models.user import UserCreate, User, Token, Expense, ExpenseCreate, ChangePasswordRequest
 from app.models.auth import EmailPasswordRequestForm
 from app.utils.auth import create_access_token, get_current_user
 from app.db import db
@@ -8,6 +8,10 @@ import bcrypt
 from dotenv import load_dotenv
 import os
 from bson import ObjectId
+from app.utils.model import get_insights_data
+from datetime import datetime, timedelta
+
+one_month_ago = datetime.now() - timedelta(days=30)
 
 load_dotenv()
 
@@ -98,9 +102,7 @@ Returns:
     dict: The current user
 """
 async def get_user(current_user: User = Depends(get_current_user)):
-    return {
-        "email": current_user.email
-        }
+    return current_user
 
 
 """Delete the current user
@@ -429,15 +431,21 @@ async def update_budget(current_user: User, budget: float):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    result = await db.users.update_one(
-        {"email": current_user.email},
-        {"$set": {"budget": budget}}
-    )
+    if budget < 0:
+        raise HTTPException(status_code=400, detail="Budget cannot be negative")
+    
+    try:
+        result = await db.users.update_one(
+            {"email": current_user.email},
+            {"$set": {"budget": budget}}
+        )
 
-    if result.modified_count == 1:
-        return {"message": "Budget updated successfully"}
-    else:
-        raise HTTPException(status_code=400, detail="Failed to update budget")
+        if result.modified_count == 1:
+            return {"message": "Budget updated successfully", "budget": budget}
+        else:
+            return {"message": "No changes made to budget", "budget": budget}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update budget: {str(e)}")
 
 """Use coins for the current user
 
@@ -496,3 +504,55 @@ async def set_user_default(current_user: User):
         return {"message": "User default values set successfully"}
     else:
         raise HTTPException(status_code=400, detail="Failed to set user default values")    
+    
+"""Get the insights for the current user
+
+Args:
+    current_user (User): The current user
+
+Returns:
+    dict: The insights for the current user
+"""
+async def get_insights(current_user: User):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    data = {
+        "expenses": list(filter(lambda expense: datetime.fromisoformat(expense['expenseDate']) >= one_month_ago, user.get("expenses", []))),
+        "budget": user.get("budget", 0),
+    }
+
+    insights = await get_insights_data(data)
+
+    return insights
+
+"""Change the password for the current user
+
+Args:
+    current_user (User): The current user
+    current_password (str): The current password
+    new_password (str): The new password
+
+Returns:
+    dict: The updated user
+"""
+async def change_password(current_user: User, current_password: str, new_password: str):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not bcrypt.checkpw(current_password.encode('utf-8'), user["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+    
+    result = await db.users.update_one(
+        {"email": current_user.email},
+        {"$set": {"hashed_password": hashed_password}}
+    )
+    
+    if result.modified_count == 1:
+        return {"message": "Password changed successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to change password")
