@@ -7,12 +7,13 @@ export default function OCRPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [rotation, setRotation] = useState(0);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
+    setRotation(0); // Reset rotation when a new image is selected
 
-    // Create a preview URL for the selected image
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -22,6 +23,11 @@ export default function OCRPage() {
     } else {
       setImagePreview(null);
     }
+  };
+
+  const rotateImage = (degrees) => {
+    const newRotation = (rotation + degrees + 360) % 360;
+    setRotation(newRotation);
   };
 
   const handleSubmit = async (e) => {
@@ -35,7 +41,14 @@ export default function OCRPage() {
     }
 
     const formData = new FormData();
-    formData.append('image', image);
+    
+    // If the image is rotated, we need to create a new rotated image file
+    if (rotation !== 0) {
+      const rotatedImage = await createRotatedImage();
+      formData.append('image', rotatedImage);
+    } else {
+      formData.append('image', image);
+    }
 
     try {
       const response = await axios.post(
@@ -53,6 +66,33 @@ export default function OCRPage() {
       console.error(error);
       setError(error.response?.data?.detail || 'An error occurred during OCR processing');
     }
+  };
+
+  const createRotatedImage = () => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (rotation === 90 || rotation === 270) {
+          canvas.width = img.height;
+          canvas.height = img.width;
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'rotated_image.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg');
+      };
+      img.src = imagePreview;
+    });
   };
 
   // Clean up the object URL when the component unmounts
@@ -80,7 +120,20 @@ export default function OCRPage() {
       {imagePreview && (
         <div className="image-preview">
           <h2>Selected Image:</h2>
-          <img src={imagePreview} alt="Selected" style={{ maxWidth: '100%', maxHeight: '300px' }} />
+          <img 
+            src={imagePreview} 
+            alt="Selected" 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '300px',
+              transform: `rotate(${rotation}deg)`,
+              transition: 'transform 0.3s ease'
+            }} 
+          />
+          <div className="rotation-controls">
+            <button onClick={() => rotateImage(-90)}>Rotate Left</button>
+            <button onClick={() => rotateImage(90)}>Rotate Right</button>
+          </div>
         </div>
       )}
       {result && (
