@@ -97,3 +97,46 @@ async def get_user(current_user: User = Depends(get_current_user)):
     return {
         "email": current_user.email
         }
+
+
+"""Delete the current user
+
+@app.delete("/delete")
+async def delete_user(current_user: User = Depends(get_current_user)):
+    return await user_controller.delete_user(current_user)
+"""
+async def delete_user(current_user: User = Depends(get_current_user)):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(
+            status_code=400, 
+            detail="Email wasn't registered"
+            )
+    await db.users.delete_one({"email": current_user.email})
+    return {
+        "message": "User deleted successfully"
+        }
+
+"""Update the current user
+@app.update("/update")
+async def update_user(current_user: User = Depends(get_current_user)):
+    return await user_controller.update_user(current_user)
+"""
+
+async def update_user(current_user: User = Depends(get_current_user)):
+    user = await db.users.find_one({"email": current_user.email})
+    if not user:
+        raise HTTPException(
+            status_code=400, 
+            detail="Email wasn't registered"
+            )
+    
+    hashed_password = bcrypt.hashpw(
+        current_user.password.encode(os.getenv("ENCODING_TYPE")),
+        bcrypt.gensalt()
+        )
+    
+    await db.users.replace_one({"password":hashed_password})
+    return {
+        "message": "User updated successfully"
+    }
