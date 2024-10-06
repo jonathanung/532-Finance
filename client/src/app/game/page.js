@@ -199,20 +199,28 @@ export default function MovingPigsFarmGame() {
     const isExpanding = farmLevel % PIGS_PER_SCENE === 0
     const cost = isExpanding ? 5 : 3
     
+    console.log('Attempting to upgrade farm. Current level:', farmLevel, 'Current coins:', coins, 'Cost:', cost);
+
     if (coins >= cost && farmLevel < PIG_VARIANTS.length) {
       try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/use_coins`,
-          { coins: cost },
+        console.log('Sending use_coins request. Coins to use:', cost);
+        const useCoinsResponse = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/use_coins?coins=${cost}`,
+          {},  // Empty body
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log('use_coins response:', useCoinsResponse.data);
         
-        await axios.get(
+        // Update local coin state with the new value from the server
+        setCoins(useCoinsResponse.data.remaining_coins);
+        
+        console.log('Sending level_up request');
+        const levelUpResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}:${process.env.NEXT_PUBLIC_PORT}/level_up`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log('level_up response:', levelUpResponse.data);
 
-        setCoins(coins - cost);
         setFarmLevel(prev => prev + 1);
         
         if (isExpanding && currentScene < TOTAL_SCENES - 1) {
@@ -220,7 +228,14 @@ export default function MovingPigsFarmGame() {
         }
       } catch (error) {
         console.error("Error upgrading farm:", error);
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+          console.error("Response status:", error.response.status);
+          console.error("Response headers:", error.response.headers);
+        }
       }
+    } else {
+      console.log('Cannot upgrade farm. Not enough coins or max level reached.');
     }
   };
 
