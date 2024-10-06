@@ -42,15 +42,14 @@ export default function GameIntro() {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (scene < 5) {
-        setScene(scene + 1)
-      }
-    }, 5000)
-
-    return () => clearTimeout(timer)
-  }, [scene])
+useEffect(() => {
+    if (scene < 4) { // Only increment scene up to 4
+      const timer = setTimeout(() => {
+        setScene(scene + 1);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [scene]);
 
   const sceneVariants = {
     hidden: { opacity: 0, y: 50 },
