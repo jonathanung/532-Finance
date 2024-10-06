@@ -1,0 +1,15 @@
+fastapi[standard]
+uvicorn
+python-dotenv
+motor
+pymongo
+pydantic[email]
+python-multipart
+bcrypt
+python-jose[cryptography]
+pillow
+pytesseract
+transformers
+torch
+aiohttp
+pyjwt

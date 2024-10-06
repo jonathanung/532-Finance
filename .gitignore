@@ -1,1 +1,4 @@
 APIenv/
+# Add these lines to .gitignore
+.env
+.env.docker

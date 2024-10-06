@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List
+from typing import List, Optional
 from datetime import date
 from bson import ObjectId
 
@@ -54,7 +54,7 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 class TokenData(BaseModel):
-    email: str | None = None
+    email: Optional[str] = None
 
 class BudgetUpdate(BaseModel):
     budget: float

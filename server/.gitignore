@@ -69,3 +69,7 @@ ENV/
 .env_local
 
 .DS_Store
+
+# Add these lines to .gitignore
+.env
+.env.docker

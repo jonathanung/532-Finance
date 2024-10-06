@@ -50,7 +50,7 @@ function Insights({ token }) {
             <h2 className="text-2xl font-bold mb-4 text-[#A8AAC7]">User Insights</h2>
             <p className="text-gray-700">
               Discover valuable insights about your data and usage patterns.
-              Click the "Get Insights" button above to see your personalized insights!
+              Click the &quot;Get Insights&quot; button above to see your personalized insights!
             </p>
           </div>
         )}

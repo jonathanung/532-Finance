@@ -46,7 +46,7 @@ export default function DefaultPage() {
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, []);
+    }, [router, token]);
 
     const handleLogout = () => {
         router.push('/logout');
@@ -91,15 +91,15 @@ export default function DefaultPage() {
                     <p className="text-gray-700">
                         Saving money is like having a superpower! When you save:
                         <br /><br />
-                        1. You can buy bigger, cooler things later 🎮
+                        1. You can buy bigger, cooler things later &apos;🎮&apos;
                         <br />
-                        2. You're prepared for surprises (like when your bike needs fixing) 🚲
+                        2. You’re prepared for surprises (like when your bike needs fixing) &apos;🚲&apos;
                         <br />
-                        3. You feel proud of yourself for being responsible 💪
+                        3. You feel proud of yourself for being responsible &apos;💪&apos;
                         <br />
-                        4. You can help others or donate to causes you care about 🐶
+                        4. You can help others or donate to causes you care about &apos;🐶&apos;
                         <br />
-                        5. You're learning a skill that will make you super smart with money when you grow up 🧠
+                        5. You’re learning a skill that will make you super smart with money when you grow up &apos;🧠&apos;
                     </p>
                 </div>
 

@@ -86,7 +86,7 @@ export default function OCRModal({ onClose }) {
     if (imageRef.current) {
       drawRotatedImage();
     }
-  }, [rotation, canvasSize]);
+  }, [rotation, canvasSize, drawRotatedImage]);
 
   const rotateImage = (degrees) => {
     setRotation((prevRotation) => (prevRotation + degrees + 360) % 360);
@@ -298,7 +298,7 @@ export default function OCRModal({ onClose }) {
           </div>
 
           <div className="bg-[#A1C7BE] rounded-lg p-4">
-            <h3 className="text-xl font-bold text-white mb-3">OCR Image Processing</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Scan Receipt</h3>
             {error && <p className="text-red-500 mb-2">{error}</p>}
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
