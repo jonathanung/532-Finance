@@ -41,6 +41,7 @@ class User(BaseModel):
     last_name: str
     email: EmailStr
     expenses: List[Expense] = []
+    level: int = 1
 
 class Token(BaseModel):
     access_token: str
