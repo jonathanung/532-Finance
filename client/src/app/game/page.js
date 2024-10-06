@@ -369,22 +369,6 @@ export default function MovingPigsFarmGame() {
         {isOCRModalOpen && (
           <OCRModal onClose={closeOCR} />
         )}
-        
-        {/* For testing purposes, you can add these buttons: */}
-        <div className="mt-4 space-y-2">
-          <button
-            onClick={() => setFarmLevelDirectly(10)}
-            className="w-full bg-[#A1C7BE] hover:bg-[#90b6ad] text-white font-bold py-2 px-4 rounded transition duration-200"
-          >
-            Set Farm Level to 10
-          </button>
-          <button
-            onClick={() => setCoinsDirectly(50)}
-            className="w-full bg-[#A1C7BE] hover:bg-[#90b6ad] text-white font-bold py-2 px-4 rounded transition duration-200"
-          >
-            Set Coins to 50
-          </button>
-        </div>
       </div>
     </div>
   )
